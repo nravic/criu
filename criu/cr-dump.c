@@ -455,17 +455,20 @@ static int check_sysvipc_map_dump(pid_t pid, VmaEntry *vma)
 }
 
 int signal_pid(int pid) {
+	int ret = -1;
 	int pidfd;
-	// only send signal to root of pid tree for now 
-	// parasite is in same PID namespace so this _should_ work? 
+	
 	pidfd = syscall(SYS_pidfd_open, pid, 0);
 		if (pidfd == -1) {
 			pr_perror("Can't get pidfd of pid %d", pid);
 			return -1;
-		}
-		
-	// very simple signal
-	return syscall(SYS_pidfd_send_signal, pidfd, SIGUSR1);
+		}	
+
+	if(!syscall(SYS_pidfd_send_signal, pidfd, SIGUSR1)) {
+		// if we managed to send a signal, start timeout
+		alarm(opts.signal_process_timeout);
+	} 
+	return ret;
 }
 
 static int get_task_auxv(pid_t pid, MmEntry *mm)
@@ -1945,7 +1948,7 @@ int cr_pre_dump_tasks(pid_t pid)
 	}
 
 	// check for signal & wait 
-	if (opts.signal_process) {
+	if (opts.signal_process_timeout) {
 		if (signal_pid(pid))
 		goto err;
 	}

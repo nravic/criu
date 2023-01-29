@@ -209,8 +209,8 @@ struct cr_options {
 	int tls;
 	int tls_no_cn_verify;
 
-	/* Controls whether to send SIGUSR1 to dumpee */
-	int signal_process;
+	/* timeout to wait for a process to complete pre-dump actions */
+	unsigned int signal_process_timeout;
 
 	/* This stores which method to use for file validation. */
 	int file_validation_method;
