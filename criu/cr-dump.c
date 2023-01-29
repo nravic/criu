@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <signal.h>
 #include <limits.h>
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
-#include <signal.h>
 
 #include <fcntl.h>
 
@@ -2135,10 +2135,6 @@ int cr_dump_tasks(pid_t pid)
 	pr_info("========================================\n");
 	pr_info("Dumping processes (pid: %d)\n", pid);
 	pr_info("========================================\n");
-
-	// We should signal the process first before proceeding with any steps
-	// and then wait accordingly if a timeout is passed 
-
 
 	/*
 	 *  We will fetch all file descriptors for each task, their number can
