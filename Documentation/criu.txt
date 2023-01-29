@@ -377,6 +377,12 @@ mount -t cgroup -o devices,freezer none devices,freezer
     Set a time limit in seconds for collecting tasks during the
     dump operation. The timeout is 10 seconds by default.
 
+*--signal-process* 'timeout'::
+    Signals the process being checkpointed that it is about to. Will wait 
+    the timeout length before continuing checkpointing operations. Does not wait for 
+    a response back. Ensure that the process you are checkpointing is listening for a SIGUSR1
+    signal.
+
 *--ghost-limit* 'size'::
     Set the maximum size of deleted file to be carried inside image.
     By default, up to 1M file is allowed. Using this

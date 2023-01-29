@@ -1,11 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
-#include <signal.h>
 #include <limits.h>
 #include <unistd.h>
 #include <errno.h>
 #include <string.h>
+#include <signal.h>
 
 #include <fcntl.h>
 
@@ -452,6 +452,20 @@ static int check_sysvipc_map_dump(pid_t pid, VmaEntry *vma)
 
 	pr_err("Task %d with SysVIPC shmem map @%" PRIx64 " doesn't live in IPC ns\n", pid, vma->start);
 	return -1;
+}
+
+int signal_pid(int pid) {
+	int pidfd;
+	// only send signal to root of pid tree for now 
+	// parasite is in same PID namespace so this _should_ work? 
+	pidfd = syscall(SYS_pidfd_open, pid, 0);
+		if (pidfd == -1) {
+			pr_perror("Can't get pidfd of pid %d", pid);
+			return -1;
+		}
+		
+	// very simple signal
+	return syscall(SYS_pidfd_send_signal, pidfd, SIGUSR1);
 }
 
 static int get_task_auxv(pid_t pid, MmEntry *mm)
@@ -1930,6 +1944,12 @@ int cr_pre_dump_tasks(pid_t pid)
 		opts.final_state = TASK_ALIVE;
 	}
 
+	// check for signal & wait 
+	if (opts.signal_process) {
+		if (signal_pid(pid))
+		goto err;
+	}
+
 	if (init_stats(DUMP_STATS))
 		goto err;
 
@@ -2115,6 +2135,10 @@ int cr_dump_tasks(pid_t pid)
 	pr_info("========================================\n");
 	pr_info("Dumping processes (pid: %d)\n", pid);
 	pr_info("========================================\n");
+
+	// We should signal the process first before proceeding with any steps
+	// and then wait accordingly if a timeout is passed 
+
 
 	/*
 	 *  We will fetch all file descriptors for each task, their number can
