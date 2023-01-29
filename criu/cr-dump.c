@@ -465,8 +465,12 @@ int signal_pid(int pid) {
 		}	
 
 	if(!syscall(SYS_pidfd_send_signal, pidfd, SIGUSR1)) {
-		// if we managed to send a signal, start timeout
-		alarm(opts.signal_process_timeout);
+		/*
+		* If we managed to send a signal, wait and block.
+		* We're not looking for a return signal, user approximates 
+		* how long the pre-dump tasks for the process takes.
+		*/
+		sleep(opts.signal_process_timeout);
 	} 
 	return ret;
 }
